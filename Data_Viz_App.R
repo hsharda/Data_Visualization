@@ -20,7 +20,7 @@ country_list <- c('All',country_list)
 ui <- fluidPage(
   
   # Set Page Title
-  titlePanel("Global Development Report"),
+  titlePanel("Global Development Report (Under Construction)"),
   
   # Use the sidebar layout for app
   sidebarLayout(
