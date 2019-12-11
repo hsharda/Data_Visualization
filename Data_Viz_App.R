@@ -5,22 +5,27 @@ library(jsonlite)
 library(gapminder)
 library(plotly)
 library(ggplot2)
+library(scales)
+library(ggrepel)
 
 # Import Dataset
+
+country_agg_data <- read.csv('Data/DataViz memo_hs957.csv')
+ylab <- c(0, 2.5, 5.0, 7.5, 10, 12.5)
 gap_data <- gapminder::gapminder
 gap_data$country_name = gap_data$country
 gap_data$country_col = gap_data$country
 
 # Define Country List
-country_list <- distinct(gap_data, country)
-country_list <- as.list(levels(country_list$country))
+country_list <- distinct(country_agg_data, Country.Name_x)
+country_list <- as.list(levels(country_list$Country.Name_x))
 country_list <- c('All',country_list)
 
 # Create the UI
 ui <- fluidPage(
   
   # Set Page Title
-  titlePanel("Global Development Report (Under Construction)"),
+  titlePanel("Global GHG Emissions and Power Plant Database (Under Construction)"),
   
   # Use the sidebar layout for app
   sidebarLayout(
@@ -49,7 +54,25 @@ ui <- fluidPage(
   
 
 # Define the server actions
-server <- function(input, output){}
+server <- function(input, output){
+  
+  output$plot <- renderPlotly({
+    
+    g <- ggplot(country_agg_data,aes(emissions_capita_2014,gdp_2018)) +
+      geom_point(alpha = 0.4,  aes(size = pop_2018, color = emissions_capita_2014)) +
+      scale_colour_gradient(low="skyblue",high="red4") +
+      geom_text_repel(aes(label = Country.Name_x), data =
+                        final_data[final_data$emissions_capita_2014>15,],size = 2, nudge_x = 2) +
+      scale_y_continuous(labels = dollar, breaks = 10^4 * ylab) +
+      xlab("Carbon emissions per Capita (in tons, as of 2014)") + 
+      ylab("GDP per Capita, PPP (2018)") +
+      ggtitle("GDP per Capita, PPP vs. Emissions per capita") +
+      theme_light()
+    
+    g
+    
+  })
+}
 
 # Run the app
 shinyApp(ui = ui, server = server)
