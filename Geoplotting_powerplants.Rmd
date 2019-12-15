@@ -1,0 +1,77 @@
+---
+title: "Geoplotting Power Plants"
+author: "Harsh Sharda"
+date: "12/15/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(ggmap)
+library(dplyr)
+library(lubridate)
+library(stringr)
+library(plotly)
+library(raster)
+library(spData)
+#library(spDataLarge)
+library(tmap)    # for static and interactive maps
+library(leaflet) # for interactive maps
+library(mapview) # for interactive maps
+library(maps)
+```
+
+
+```{r}
+powerplant_viz <- read.csv("Data/Powerplant/power_plant_data_locations.csv")
+```
+
+```{r}
+tm_shape(world) + tm_polygons(col = "Median_income")
+#+ tm_symbols(col = "black", border.col = "white", size = "capacity_mw")
+```
+
+```{r}
+terrain <- get_stamenmap(bbox = c(left = -124.848974, 
+                              bottom = 24.396308, 
+                              right =-66.885444, 
+                              top = 49.384358), zoom = 5, maptype = "terrain")
+```
+
+```{r}
+ggmap(terrain) + geom_point(data = powerplant_viz,
+                            # Define your dataset
+                            aes(x = longitude, y = latitude), # Select the latitude and longitude columns
+                            size = 1, # Set the point size
+                            shape=19, # Select the desired shape
+                            color='red', # Set the desired color
+                            alpha=0.1)
+```
+
+```{r}
+p <- ggplot() +  geom_polygon(data=powerplant_viz, aes(x=longitude, y=latitude),  color="white", lwd = .25)
+ 
+ggplotly(p)
+```
+
+```{r}
+mapWorld = map("world", fill = TRUE, plot = FALSE)
+leaflet(data = mapStates) %>% addTiles() %>%
+  addPolygons(fillColor = topo.colors(10, alpha = NULL), stroke = FALSE)
+```
+
+```{r}
+leaflet(data = mapWorld) %>% addTiles() %>%
+  addPolygons(fillColor = topo.colors(10, alpha = NULL), stroke = FALSE) %>%
+  addCircles(data = powerplant_viz, lat = ~latitude, lng = ~longitude, popup = ~name) %>%
+  addCircleMarkers(radius = 5)
+```
+
+```{r}
+pal <- colorFactor(palette = "Dark2", domain = powerplant_viz$primary_fuel)
+
+leaflet(powerplant_viz) %>% addTiles() %>%
+  addCircleMarkers(lat = ~latitude, lng = ~longitude, popup = ~name, radius = ~0.0000001,color = ~pal(primary_fuel), fillOpacity = 0.8)
+```

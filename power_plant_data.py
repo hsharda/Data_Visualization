@@ -37,8 +37,18 @@ list(power_plant_data.columns.values)
 power_plant_data = power_plant_data[['country_code','country_name','name','capacity_mw',
                                      'latitude','longitude','primary_fuel']]
 
+power_plant_data.to_csv(r'Data/Powerplant/power_plant_data_locations.csv')
+
+
 #Population Data
-total_population = total_population[total_population['Indicator Name'] == 'Population, total'][['Country Name','Country Code','2017','2018']].rename(columns = {'2017':'pop_2017','2018':'pop_2018'})
+a = []
+a = a.astype(str)
+
+years = [str(i) for i in range(1992,2015)] 
+   
+total_population = total_population[total_population['Indicator Name'] == 'Population, total'][['Country Name','Country Code',years]]
+
+.rename(columns = {'2017':'pop_2017','2018':'pop_2018'})
 
 #CO2 emissions 
 co2_emissions_capita = co2_emissions_capita[['Country Name','Country Code','2014']].rename(columns = {'2014': 'emissions_capita_2014'})
