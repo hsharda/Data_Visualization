@@ -31,17 +31,14 @@ co2_emissions_total = pd.read_csv("Data/WB_Data/API_EN.ATM.CO2E.KT_DS2_en_csv_v2
 
 #Renaming the merging variable
 power_plant_data = power_plant_data.rename(columns = {'country':'country_code','country_long':'country_name'})
-power_plant_data = power_plant_data[['country_code','country_name','name','']]
+
 list(power_plant_data.columns.values)
+
+power_plant_data = power_plant_data[['country_code','country_name','name','capacity_mw',
+                                     'latitude','longitude','primary_fuel']]
 
 #Population Data
 total_population = total_population[total_population['Indicator Name'] == 'Population, total'][['Country Name','Country Code','2017','2018']].rename(columns = {'2017':'pop_2017','2018':'pop_2018'})
-
-#Household-size data
-household_size = household_size[household_size['Region'] == 'Total'][['Country','ISO_Code','2010','2011','2012','2013','2014','2015','2016','2017','2018']].rename(columns = {'Country':'Country Name','ISO_Code': 'Country Code','2010': 'hh_size_2010','2011': 'hh_size_2011','2012': 'hh_size_2012','2013': 'hh_size_2013','2014': 'hh_size_2014','2015': 'hh_size_2015','2016': 'hh_size_2016','2017':'hh_size_2017','2018':'hh_size_2018'})
-
-#Percent Electricity
-percent_electricity = percent_electricity[['Country Name','Country Code','2016','2017','2018']].rename(columns = {'2016': 'perc_elec_2016','2017':'perc_elec_2017','2018':'perc_elec_2018'})
 
 #CO2 emissions 
 co2_emissions_capita = co2_emissions_capita[['Country Name','Country Code','2014']].rename(columns = {'2014': 'emissions_capita_2014'})
