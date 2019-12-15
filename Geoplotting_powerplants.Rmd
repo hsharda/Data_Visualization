@@ -70,7 +70,7 @@ leaflet(data = mapWorld) %>% addTiles() %>%
 ```
 
 ```{r}
-pal <- colorFactor(palette = "Dark2", domain = powerplant_viz$primary_fuel)
+pal <- colorFactor(color = c("Green", "Orange"), domain = powerplant_viz$primary_fuel)
 
 leaflet(powerplant_viz) %>% addTiles() %>%
   addCircleMarkers(lat = ~latitude, lng = ~longitude, popup = ~name, radius = ~0.0000001,color = ~pal(primary_fuel), fillOpacity = 0.8)

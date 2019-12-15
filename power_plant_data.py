@@ -37,6 +37,29 @@ list(power_plant_data.columns.values)
 power_plant_data = power_plant_data[['country_code','country_name','name','capacity_mw',
                                      'latitude','longitude','primary_fuel']]
 
+power_plant_data.primary_fuel.unique()
+
+def category(x):
+    if x == "Hydro":
+        return "Renewable"
+    elif x == "Wind":
+        return "Renewable"
+    elif x == "Nuclear":
+        return "Renewable"
+    elif x == "Solar":
+        return "Renewable"
+    elif x == "Wave and Tidal":
+        return "Renewable"
+    elif x == "Geothermal":
+        return "Renewable"
+    elif x == "Storage":
+        return "Renewable"
+    else:
+        return "Non-renewable"
+    
+
+power_plant_data["fuel_category"] = power_plant_data["primary_fuel"].apply(category)
+
 power_plant_data.to_csv(r'Data/Powerplant/power_plant_data_locations.csv')
 
 
