@@ -30,11 +30,11 @@ co2_emissions_total = pd.read_csv("Data/WB_Data/API_EN.ATM.CO2E.KT_DS2_en_csv_v2
 # Data Wrangling
 
 #Renaming the merging variable
-power_plant_data = power_plant_data.rename(columns = {'country':'country_code','country_long':'country_name'})
+power_plant_data = power_plant_data.rename(columns = {'country':'ISO3','country_long':'country_name'})
 
 list(power_plant_data.columns.values)
 
-power_plant_data = power_plant_data[['country_code','country_name','name','capacity_mw',
+power_plant_data = power_plant_data[['ISO3','country_name','name','capacity_mw',
                                      'latitude','longitude','primary_fuel']]
 
 power_plant_data.primary_fuel.unique()
@@ -60,8 +60,39 @@ def category(x):
 
 power_plant_data["fuel_category"] = power_plant_data["primary_fuel"].apply(category)
 
-power_plant_data.to_csv(r'Data/Powerplant/power_plant_data_locations.csv')
+power_plant_data.to_csv(r'Data/Powerplant/power_plant_data_locations.csv', index = False)
 
+
+#CO2 emissions 
+#co2_emissions_capita = co2_emissions_capita[['Country Name','Country Code','2014']].rename(columns = {'2014': 'emissions_capita_2014'})
+#co2_emissions_total = co2_emissions_total[['Country Name','Country Code','2014']].rename(columns = {'2014': 'emissions_total_2014'})
+co2_emissions_viz = co2_emissions_total[['Country Name','Country Code','2014']].rename(columns = {'2014': 'emissions_total_2014',
+                                       'Country Code': 'ISO3','Country Name':'country_name'})
+
+
+    
+
+pp_dummies = pd.get_dummies(power_plant_data['primary_fuel'], prefix = 'primary_fuel')
+pp_dummies_category = pd.get_dummies(power_plant_data['fuel_category'], prefix = 'fuel_category')
+power_plant_data = pd.concat([power_plant_data, pp_dummies,pp_dummies_category], axis=1)
+
+list(power_plant_data.columns.values)
+
+pp_data_group = pd.DataFrame(power_plant_data.groupby(['ISO3','country_name'])['capacity_mw',
+                             'primary_fuel_Biomass','primary_fuel_Coal','primary_fuel_Cogeneration',
+                             'primary_fuel_Gas','primary_fuel_Geothermal','primary_fuel_Hydro',
+                             'primary_fuel_Nuclear','primary_fuel_Oil','primary_fuel_Other',
+                             'primary_fuel_Petcoke','primary_fuel_Solar','primary_fuel_Storage',
+                             'primary_fuel_Waste','primary_fuel_Wave and Tidal','primary_fuel_Wind',
+                             'fuel_category_Non-renewable','fuel_category_Renewable'].agg('sum').reset_index())
+
+# Calculating the total count
+pp_data_group['Total_power_plants'] = pp_data_group.loc[:,['fuel_category_Non-renewable','fuel_category_Renewable']].sum(axis=1)
+
+merged_viz1 = pd.merge(pp_data_group, co2_emissions_viz, on = ['ISO3'], how = 'left')
+merged_viz1 = merged_viz1.drop(["country_name_y"], axis = 1).rename(columns = {"country_name_x":"country_name"})
+
+merged_viz1.to_csv(r'Data/Powerplant/power_plants_locations_emissions.csv', index = False)
 
 #Population Data
 a = []
@@ -73,9 +104,6 @@ total_population = total_population[total_population['Indicator Name'] == 'Popul
 
 .rename(columns = {'2017':'pop_2017','2018':'pop_2018'})
 
-#CO2 emissions 
-co2_emissions_capita = co2_emissions_capita[['Country Name','Country Code','2014']].rename(columns = {'2014': 'emissions_capita_2014'})
-co2_emissions_total = co2_emissions_total[['Country Name','Country Code','2014']].rename(columns = {'2014': 'emissions_total_2014'})
 
 #GDP Data
 gdp_ppp_data = gdp_ppp_data[['Country Name','Country Code','2016','2017','2018']].rename(columns = {'2016': 'gdp_2016','2017':'gdp_2017','2018':'gdp_2018'})
