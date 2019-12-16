@@ -59,6 +59,7 @@ def category(x):
     
 
 power_plant_data["fuel_category"] = power_plant_data["primary_fuel"].apply(category)
+power_plant_data['name'] = power_plant_data['name'].str.title()
 
 power_plant_data.to_csv(r'Data/Powerplant/power_plant_data_locations.csv', index = False)
 
@@ -91,6 +92,8 @@ pp_data_group['Total_power_plants'] = pp_data_group.loc[:,['fuel_category_Non-re
 
 merged_viz1 = pd.merge(pp_data_group, co2_emissions_viz, on = ['ISO3'], how = 'left')
 merged_viz1 = merged_viz1.drop(["country_name_y"], axis = 1).rename(columns = {"country_name_x":"country_name"})
+
+
 
 merged_viz1.to_csv(r'Data/Powerplant/power_plants_locations_emissions.csv', index = False)
 

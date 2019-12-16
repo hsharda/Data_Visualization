@@ -17,6 +17,7 @@ library(plotly)
 library(raster)
 library(spData)
 library(sf)
+library(htmltools)
 #library(spDataLarge)
 library(tmap)    # for static and interactive maps
 library(leaflet) # for interactive maps
@@ -109,7 +110,7 @@ powerplant_emissions1 <- powerplant_emissions1[order(match(powerplant_emissions1
 ```
 
 ```{r}
-bins <- c(0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12.5)
+bins <- c(0, 2, 4, 6, 8, 10, 12, Inf)
 pal <- colorBin(palette = "YlOrRd",
                     domain = powerplant_emissions1$emissions_total_2014,
                     bins = bins * 10^6)
@@ -120,12 +121,55 @@ pal2 <- colorFactor(palette = c("firebrick3","darkolivegreen3"), domain = powerp
 ```{r}
 m <- leaflet(powerplant_viz) %>%  addTiles() %>%
   addPolygons(data = map_world1, weight = 1, smoothFactor = 0.5, color = "white",
-              fillOpacity = 0.8, fillColor = ~pal(powerplant_emissions1$emissions_total_2014)) %>%
+              fillOpacity = 0.8, fillColor = ~pal(powerplant_emissions1$emissions_total_2014)
+#              highlight = highlightOptions(
+#                weight = 5,
+#                color = "gray",
+#                dashArray = ""
+#                fillOpacity = 0.7,
+#                bringToFront = TRUE)
+              ) %>%
   addCircleMarkers(lat = ~latitude, lng = ~longitude, popup = ~name, radius = ~0.0000001,color = ~pal2(powerplant_viz$fuel_category), fillOpacity = 0.8)
 m
 ```
 
 ```{r}
-levels(powerplant_emissions$country_name)[1] <- "Afghanistan"
-#is.element(map_world$ISO3,powerplant_emissions$ISO3)
+label <- paste("<p>","Country Name: ",powerplant_emissions1$country_name,"</p>",
+  "<p>","Emissions: ",powerplant_emissions1$emissions_total_2014,"</p>",
+               sep = "")
+```
+
+```{r}
+m <- leaflet(powerplant_viz) %>%  addTiles() %>%
+  addPolygons(data = map_world1, weight = 1, smoothFactor = 0.5, color = "white",
+              fillOpacity = 0.8, fillColor = ~pal(powerplant_emissions1$emissions_total_2014),
+              label = lapply(label, HTML),
+              group = "GHG Emissions"
+#              highlight = highlightOptions(
+#                weight = 5,
+#                color = "gray",
+#                dashArray = ""
+#                fillOpacity = 0.7,
+#                bringToFront = TRUE)
+              ) %>%
+  addLegend(pal = pal,
+            values = powerplant_emissions1$emissions_total_2014,
+            opacity = 0.7,
+            position = "topright",
+            title = "GHG Emissions") %>%
+    addLegend(pal = pal2,
+            values = powerplant_viz$fuel_category,
+            opacity = 0.7,
+            position = "bottomright",
+            title = "Fuel Category") %>%
+  addCircleMarkers(lat = ~latitude, lng = ~longitude,
+                   popup = ~name,
+                   radius = ~0.0000001,
+                   color = ~pal2(powerplant_viz$fuel_category),
+                   fillOpacity = 0.8,
+                   group = "Power Plants") %>%
+  addLayersControl(overlayGroups = c("GHG Emissions", "Fuel Category"),
+                   options = layersControlOptions(collapsed = FALSE),
+                   position = "bottomleft")
+m
 ```
