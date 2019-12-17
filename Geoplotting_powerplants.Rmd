@@ -30,6 +30,7 @@ library(maps)
 powerplant_viz <- read.csv("Data/Powerplant/power_plant_data_locations.csv")
 powerplant_emissions <- read.csv("Data/Powerplant/power_plants_locations_emissions.csv")
 map_world <- st_read("Data/Shapefile/TM_WORLD_BORDERS-0.3.shp")
+country_data <- read.csv("Data/DataViz memo_hs957.csv")
 ```
 
 
@@ -65,20 +66,6 @@ pal2 <- colorFactor(palette = c("firebrick3","darkolivegreen3"), domain = powerp
 
 ```
 
-```{r}
-m <- leaflet(powerplant_viz) %>%  addTiles() %>%
-  addPolygons(data = map_world1, weight = 1, smoothFactor = 0.5, color = "white",
-              fillOpacity = 0.8, fillColor = ~pal(powerplant_emissions1$emissions_total_2014)
-#              highlight = highlightOptions(
-#                weight = 5,
-#                color = "gray",
-#                dashArray = ""
-#                fillOpacity = 0.7,
-#                bringToFront = TRUE)
-              ) %>%
-  addCircleMarkers(lat = ~latitude, lng = ~longitude, popup = ~name, radius = ~0.0000001,color = ~pal2(powerplant_viz$fuel_category), fillOpacity = 0.8)
-m
-```
 
 ```{r}
 label <- paste("<p>","Country Name: ",powerplant_emissions1$country_name,"</p>",
@@ -115,16 +102,12 @@ m <- leaflet(powerplant_viz) %>%  addTiles() %>%
                    color = ~pal2(powerplant_viz$fuel_category),
                    fillOpacity = 0.8,
                    group = "Power Plants") %>%
-  addLayersControl(overlayGroups = c("GHG Emissions", "Fuel Category"),
+  addLayersControl(overlayGroups = c("GHG Emissions", "Power Plants"),
                    options = layersControlOptions(collapsed = FALSE),
                    position = "bottomleft")
 m
 ```
 
-```{r}
-tm_shape(world) + tm_polygons(col = "Median_income")
-#+ tm_symbols(col = "black", border.col = "white", size = "capacity_mw")
-```
 
 ## Other Ideas:
 
@@ -172,3 +155,22 @@ leaflet(powerplant_viz) %>%  addTiles() %>%
   addCircleMarkers(lat = ~latitude, lng = ~longitude, popup = ~name, radius = ~0.0000001,color = ~pal(fuel_category), fillOpacity = 0.8)
 ```
 
+```{r}
+tm_shape(world) + tm_polygons(col = "Median_income")
+#+ tm_symbols(col = "black", border.col = "white", size = "capacity_mw")
+```
+
+```{r}
+m <- leaflet(powerplant_viz) %>%  addTiles() %>%
+  addPolygons(data = map_world1, weight = 1, smoothFactor = 0.5, color = "white",
+              fillOpacity = 0.8, fillColor = ~pal(powerplant_emissions1$emissions_total_2014)
+#              highlight = highlightOptions(
+#                weight = 5,
+#                color = "gray",
+#                dashArray = ""
+#                fillOpacity = 0.7,
+#                bringToFront = TRUE)
+              ) %>%
+  addCircleMarkers(lat = ~latitude, lng = ~longitude, popup = ~name, radius = ~0.0000001,color = ~pal2(powerplant_viz$fuel_category), fillOpacity = 0.8)
+m
+```

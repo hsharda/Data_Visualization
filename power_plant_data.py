@@ -54,6 +54,8 @@ def category(x):
         return "Renewable"
     elif x == "Storage":
         return "Renewable"
+    elif x == "Biomass":
+        return "Renewable"
     else:
         return "Non-renewable"
     
@@ -97,6 +99,37 @@ merged_viz1 = merged_viz1.drop(["country_name_y"], axis = 1).rename(columns = {"
 
 merged_viz1.to_csv(r'Data/Powerplant/power_plants_locations_emissions.csv', index = False)
 
+
+## Melting CO2 emissions data
+
+co2_emissions_viz = co2_emissions_total.rename(columns = {'Country Code': 'ISO3','Country Name':'country_name'}).drop(["Indicator Code"], axis = 1)
+
+years_list_em = list(co2_emissions_vizzies.columns.values)
+years_chosen_em = years_list[years.index('1992'):years.index('2014')+1]
+
+co2_emissions_melt = pd.melt(co2_emissions_viz, id_vars = ["ISO3","country_name"],
+                             value_vars = years_chosen_em).sort_values(["country_name","variable"]).rename(columns = {"variable": "years",
+                            "value":"emissions"}).reset_index(drop = True)
+
+## Melting GDP PPP Data
+    
+gdp_viz = gdp_ppp_data.rename(columns = {'Country Code': 'ISO3','Country Name':'country_name'}).drop(["Indicator Code"], axis = 1)
+
+years_list_gdp = list(gdp_viz.columns.values)
+years_chosen_gdp = years_list_gdp[years_list_gdp.index('1992'):years_list_gdp.index('2014')+1]
+
+gdp_melt = pd.melt(gdp_viz, id_vars = ["ISO3","country_name"],
+                             value_vars = years_chosen_gdp).sort_values(["country_name","variable"]).rename(columns = {"variable": "years",
+                            "value":"gdp_ppp"}).reset_index(drop = True)
+
+## Merging both the datasets
+
+gdp_emissions = pd.merge(gdp_melt,co2_emissions_melt, on = ["ISO3","years"], how = "inner").drop(["country_name_y"], axis = 1).rename(columns = {"country_name_x":"country_name"})
+gdp_emissions["years"] = gdp_emissions["years"].astype(int)
+
+gdp_emissions.to_csv(r'Data/Powerplant/gdp_emissions.csv', index = False)
+
+  
 #Population Data
 a = []
 a = a.astype(str)
