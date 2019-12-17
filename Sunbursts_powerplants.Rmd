@@ -1,0 +1,140 @@
+---
+title: "Sunburst_powerplants"
+author: "Harsh Sharda"
+date: "12/16/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+library(sunburstR)
+library(d3r)
+library(janitor)
+```
+
+```{r}
+powerplant_viz <- read.csv("Data/Powerplant/power_plant_data_locations.csv")
+```
+
+```{r}
+p <- plot_ly(
+  labels = c("Eve", "Cain", "Seth", "Enos", "Noam", "Abel", "Awan", "Enoch", "Azura"),
+  parents = c("", "Eve", "Eve", "Seth", "Seth", "Eve", "Eve", "Awan", "Eve"),
+  values = c(10, 14, 12, 10, 2, 6, 6, 4, 4),
+  type = 'sunburst'
+)
+p
+```
+
+```{r}
+check1 <- powerplant_viz %>%
+  group_by(country_name,fuel_category,primary_fuel) %>%
+  summarize(tot_capacity = sum(capacity_mw))
+
+grandTotals <- powerplant_viz %>%
+  group_by(fuel_category,primary_fuel) %>%
+  summarize(Name = "All",
+            tot_capacity = sum(capacity_mw)) %>%
+  rename(country_name = Name) %>%
+  bind_rows(check1)
+
+
+write.csv(check1, "Data/check1.csv", row.names = FALSE)
+```
+
+
+```{r}
+check2 <- check1 %>% filter(country_name=="Armenia")
+check3 <- check2[,2:4]
+```
+
+
+```{r}
+tree <- d3_nest(check3, value_cols = "tot_capacity")
+sb1 <- sunburst(tree, width="100%", height=400, sumNodes = FALSE)
+sb1
+```
+
+```{r}
+sequences <- read.csv("Data/sequences.csv")
+sb <- sequences %>%
+arrange(desc(depth), path) %>%
+sunburst(width="100%",height = "100%", legend = FALSE)
+
+sb
+```
+
+
+```{r}
+tree <- d3_nest(check2, value_cols = "tot_capacity")
+sb2 <- sund2b(tree, width="100%")
+sb2
+```
+
+```{r}
+q <- plot_ly(
+  labels = c("All","Renewable","Non-Renewable","Hydro"),
+  parents = c("","All","All","Renewable"),
+  values = c(25,10,20,5),
+  type = 'sunburst'
+)
+q
+```
+
+```{r}
+spreaded <- grandTotals %>% spread(primary_fuel, tot_capacity, fill = 0)
+ls <- names(spreaded)
+ls1 <- ls[3:17]
+```
+
+```{r}
+name_country = "Australia"
+n <- grandTotals %>% filter(country_name == name_country)
+spreaded_n <- n %>% spread(primary_fuel, tot_capacity, fill = 0)
+
+sum_non_renew <- grandTotals %>% filter(fuel_category == "Non-renewable" & country_name == name_country) %>% summarise(sum = sum(tot_capacity))
+
+sum_renew <- grandTotals %>% filter(fuel_category == "Renewable" & country_name == name_country) %>% summarise(sum = sum(tot_capacity))
+
+sum_total <- grandTotals %>% filter(country_name == name_country) %>%
+  group_by(country_name) %>% summarise(sum = sum(tot_capacity))
+
+values <-c(sum_total$sum,sum_non_renew$sum,sum_renew$sum)
+a <- c(sum_total$sum,sum_non_renew$sum,sum_renew$sum)
+a
+```
+
+
+```{r}
+for (val in ls1){
+  a <- grandTotals %>% filter(primary_fuel == val & country_name == name_country) %>%
+    summarise(sum = sum(tot_capacity))
+  values = append(values, a$sum )
+}
+
+labels <- c("All","Non-Renewable", "Renewable", ls1)
+parents <- c("","All","All","Renewable",
+             "Non-Renewable","Non-Renewable","Non-Renewable","Renewable",
+             "Renewable","Renewable","Non-Renewable","Non-Renewable",
+             "Non-Renewable","Renewable","Renewable","Renewable",
+             "Renewable","Renewable")
+
+```
+
+
+```{r}
+p <- plot_ly(
+  labels = labels,
+  parents = parents,
+  values = values,
+  type = 'sunburst',
+  branchvalues = "remainder"
+) %>%
+    layout(title = 'Fuel Category')
+p
+```
+
+
