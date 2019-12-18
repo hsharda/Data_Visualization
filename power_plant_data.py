@@ -13,12 +13,7 @@ Created on Sat Sep 28 00:44:55 2019
  
 import pandas as pd
 import numpy as np
-import geopandas as gdp
-import descartes
-from shapely.geometry import Point,Polygon
-import seaborn as sns
-import matplotlib.pyplot as plt
-from pandas.plotting import scatter_matrix
+from functools import reduce
 
 #Importing the dataset
 power_plant_data = pd.read_csv("Data/Powerplant/global_power_plant_database.csv")
@@ -105,36 +100,58 @@ merged_viz1.to_csv(r'Data/Powerplant/power_plants_locations_emissions.csv', inde
 co2_emissions_viz = co2_emissions_total.rename(columns = {'Country Code': 'ISO3','Country Name':'country_name'}).drop(["Indicator Code"], axis = 1)
 
 years_list_em = list(co2_emissions_vizzies.columns.values)
-years_chosen_em = years_list[years.index('1992'):years.index('2014')+1]
+years_chosen_em = years_list[years_list_em.index('2000'):years_list_em.index('2014')+1]
 
-co2_emissions_melt = pd.melt(co2_emissions_viz, id_vars = ["ISO3","country_name"],
+co2_emissions_viz1 = co2_emissions_viz.dropna(subset = years_chosen_em)
+
+
+co2_emissions_melt = pd.melt(co2_emissions_viz1, id_vars = ["ISO3","country_name"],
                              value_vars = years_chosen_em).sort_values(["country_name","variable"]).rename(columns = {"variable": "years",
-                            "value":"emissions"}).reset_index(drop = True)
+                            "value":"Emissions"}).reset_index(drop = True)
 
 ## Melting GDP PPP Data
     
 gdp_viz = gdp_ppp_data.rename(columns = {'Country Code': 'ISO3','Country Name':'country_name'}).drop(["Indicator Code"], axis = 1)
 
 years_list_gdp = list(gdp_viz.columns.values)
-years_chosen_gdp = years_list_gdp[years_list_gdp.index('1992'):years_list_gdp.index('2014')+1]
+years_chosen_gdp = years_list_gdp[years_list_gdp.index('2000'):years_list_gdp.index('2014')+1]
 
-gdp_melt = pd.melt(gdp_viz, id_vars = ["ISO3","country_name"],
+gdp_viz1 = gdp_viz.dropna(subset = years_chosen_gdp)
+
+gdp_melt = pd.melt(gdp_viz1, id_vars = ["ISO3","country_name"],
                              value_vars = years_chosen_gdp).sort_values(["country_name","variable"]).rename(columns = {"variable": "years",
                             "value":"gdp_ppp"}).reset_index(drop = True)
 
-## Merging both the datasets
+    
+## Melting Population Data
+    
+pop_viz = total_population[total_population['Indicator Name'] == 'Population, total'].rename(columns = {'Country Code': 'ISO3','Country Name':'country_name'}).drop(["Indicator Code"], axis = 1)
 
-gdp_emissions = pd.merge(gdp_melt,co2_emissions_melt, on = ["ISO3","years"], how = "inner").drop(["country_name_y"], axis = 1).rename(columns = {"country_name_x":"country_name"})
-gdp_emissions["years"] = gdp_emissions["years"].astype(int)
+pop_list = list(pop_viz.columns.values)
+pop_chosen = pop_list_gdp[pop_list_gdp.index('2000'):pop_list_gdp.index('2014')+1]
 
-gdp_emissions.to_csv(r'Data/Powerplant/gdp_emissions.csv', index = False)
+pop_viz1 = pop_viz.dropna(subset = pop_chosen)
+
+pop_melt = pd.melt(pop_viz1, id_vars = ["ISO3","country_name"],
+                             value_vars = years_chosen_gdp).sort_values(["country_name","variable"]).rename(columns = {"variable": "years",
+                            "value":"pop_size"}).reset_index(drop = True)
+     
+    
+## Merging all the datasets
+
+data_frames = [gdp_melt, co2_emissions_melt, pop_melt]
+
+merged_viz = reduce(lambda  left,right: pd.merge(left,right,on=["ISO3","years"],
+                                            how='left'), data_frames).drop(["country_name_y","country_name_x"], axis = 1)
+
+pp_data_group_subset = pp_data_group["ISO3"]
+
+merged_viz1 = pd.merge(pp_data_group_subset,merged_viz, on = ["ISO3"], how = 'inner')
+
+merged_viz1.to_csv(r'Data/Powerplant/gdp_emissions_pop.csv', index = False)
 
   
 #Population Data
-a = []
-a = a.astype(str)
-
-years = [str(i) for i in range(1992,2015)] 
    
 total_population = total_population[total_population['Indicator Name'] == 'Population, total'][['Country Name','Country Code',years]]
 

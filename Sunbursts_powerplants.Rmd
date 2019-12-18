@@ -39,7 +39,7 @@ ls1 <- ls[3:17]
 ```
 
 ```{r}
-name_country = "India"
+name_country = "Australia"
 n <- grandTotals %>% filter(country_name == name_country)
 
 sum_non_renew <- grandTotals %>% filter(fuel_category == "Non-renewable" & country_name == name_country) %>% summarise(sum = sum(tot_capacity))
