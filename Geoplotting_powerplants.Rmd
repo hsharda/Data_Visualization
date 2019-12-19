@@ -30,7 +30,7 @@ library(maps)
 powerplant_viz <- read.csv("Data/Powerplant/power_plant_data_locations.csv")
 powerplant_emissions <- read.csv("Data/Powerplant/power_plants_locations_emissions.csv")
 map_world <- st_read("Data/Shapefile/TM_WORLD_BORDERS-0.3.shp")
-country_data <- read.csv("Data/DataViz memo_hs957.csv")
+#country_data <- read.csv("Data/DataViz memo_hs957.csv")
 ```
 
 

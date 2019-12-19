@@ -39,7 +39,6 @@ ls <- grandTotals %>% spread(primary_fuel, tot_capacity, fill = 0) %>%
 
 ```{r}
 name_country = "India"
-n <- grandTotals %>% filter(country_name == name_country)
 
 sum_non_renew <- grandTotals %>% filter(fuel_category == "Non-renewable" & country_name == name_country) %>% summarise(sum = sum(tot_capacity))
 
@@ -61,7 +60,7 @@ for (val in ls){
   values = append(round(values), round(a$sum))
 }
 
-labels <- c("All","Non-renewable", "Renewable", ls1)
+labels <- c("All","Non-renewable", "Renewable", ls)
 parents <- c("","All","All","Renewable",
              "Non-renewable","Non-renewable","Non-renewable","Renewable",
              "Renewable","Renewable","Non-renewable","Non-renewable",
