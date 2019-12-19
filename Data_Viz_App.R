@@ -105,6 +105,22 @@ ui <- fluidPage(
   
   hr(),
   
+  fluidRow(
+    column(width = 12, align = "left",
+           h3("Development of Countries against GHG Emissions")),
+    column(width = 12,
+           p("With the continuous increase in the greenhouse gas (GHG) emissions (Levin, K. (2018)),
+             the effects of climate change are more prominent than ever. Scientists have confirmed that warming will
+             increase the spread of Ebola virus, reduce emperor penguin populations by up to 80% by 2100,
+             and cause hurricanes and other extreme weather to stick around longer (Levin, K., & Tirpak, D. (2019))."),
+           p("This dashboard aims to provide evidence of increasing GHG emissions with a spatial view
+             of different kinds of powerplants through out the world. It further illustrates a divide of renewable
+             and non-renewable powerplants at country specific level.")
+    )
+  ),
+  
+  hr(),
+  
   # Use the sidebar layout for app
   sidebarLayout(
     
@@ -115,28 +131,42 @@ ui <- fluidPage(
       selectInput(inputId = 'countries',                 
                   label = "Select a Country:",            
                   choices = country_list_viz1 # List of options
-      )
+      ),
+      p("*Several countries are missing because there isn't either emissions data
+        or GDP per capita data from the World Bank"),
+      p("*Emissions per capita as in indicator wasn't chosen. Countries with higher GDP per capita
+        causing high carbon emissions per capita are mostly Gulf countries (oil rich) such as Qatar, Kuwait,
+        Bahrain etc. owing to smaller populations (ranging from 400k to 10 million). Thus isn't
+        a realistic comparison")
     ),
     
     # Define text for main panel
     mainPanel(
-      h4("Overview"),
-      p("The below interactive graph helps views trends of GDP per capita, PPP world spanning from the years 2000 to 2014.
-        GDP per capita suggests the countries' development trajectories and how it has influenced GHG emissions
-        
-        It is important to understand how different countries' development trajectories have changed over time.
-        This dashboard is intended to make it easier to see trends for individual countries as well as groups of countries.
-        Press the play button below to see how countries have progressed over time.
-        Select a country from the dropdown list to highlight its progress."),
       plotlyOutput("plot")
       )
-    
     ),
+
+  fluidRow(
+    column(width = 12,
+           h5("Observations:"),
+           p("1. Gulf countries as mentioned before, have very high GDP per capita, PPP($)
+             but the total emissions of these countries is very low compared to 
+             other (observable) countries"),
+           p("2. Three countries namely, China, United States and India (ranked) 
+             are one of the biggest polluters in the world where China and India 
+             have relatively low GDP per capita compared to the United States."),
+           p("3. China emitted over 12 gigatonnes (Gt) of GHG emissions in the year 2014, accounting
+              for 30% of the world total (McGrath, Matt (2014-09-21)) mainly stemming
+             from coal electricity generation and mining")
+
+    )
+    ),
+  
   hr(),
   
   fluidRow(
-    column(width = 12, align = "center",
-    h4("Spread of Powerplants throughout the world")),
+    column(width = 12, align = "left",
+    h3("Powerplants spread throughout the World")),
     column(width = 12,
     p("The world is rapidly changing. It is important to understand how different countries' development trajectories have changed over time.
       This dashboard is intended to make it easier to see trends for individual countries as well as groups of countries.
@@ -166,7 +196,15 @@ ui <- fluidPage(
                 choices = country_list_viz3 # List of options
     ), width = 6 , plotlyOutput("plot_sunburst2")
     
-  )
+  ),
+  
+  fluidRow(
+    column(width = 12, align = "left",
+           h4("Bibliography")),
+    p("> McGrath, Matt (2014-09-21). 'China overtakes EU on 'per head' CO2'. Retrieved
+      2019-09-26.Probable reason of rapid increase in GHG emissions in China
+      from the year 2000 to 2014 is because of rapid industrialization.
+      Major industries include mining and ore processing"))
   
 )
   
@@ -187,9 +225,9 @@ server <- function(input, output){
                                    color = country_col, ids = country_name), show.legend = F) +
         scale_y_continuous(labels = dollar, breaks = 10^4 * ylab) + 
         scale_x_continuous(labels = comma, breaks = 10^6 * xlab) +
-        xlab("Total Carbon Emissions") + 
-        ylab("GDP per Capita, PPP") +
-        ggtitle("GDP per Capita, PPP vs. Emissions per capita") +
+        xlab("Total Carbon Emissions (Kilo Ton)") + 
+        ylab("GDP per Capita, PPP($)") +
+        ggtitle("GDP per Capita, PPP vs. Total emissions") +
         theme_light() + 
         scale_color_manual(values = c("skyblue","red4"))
         
@@ -208,7 +246,7 @@ server <- function(input, output){
         scale_y_continuous(labels = dollar, breaks = 10^4 * ylab) + 
         scale_x_continuous(labels = comma, breaks = 10^6 * xlab) +
         xlab("Total Carbon Emissions (Kilo Ton)") + 
-        ylab("GDP per Capita, PPP $") +
+        ylab("GDP per Capita, PPP($)") +
         ggtitle("GDP per Capita, PPP vs. Total emissions") +
         theme_light()
       
@@ -221,6 +259,7 @@ server <- function(input, output){
   output$geo_plot <- renderLeaflet({
     
     m <- leaflet(powerplant_viz) %>%  addTiles() %>%
+      setView(0,0, zoom = 0.9) %>%
       addPolygons(data = map_world, weight = 1, smoothFactor = 0.5, color = "white",
                   fillOpacity = 0.8, fillColor = ~pal(powerplant_emissions$emissions_total_2014),
                   label = lapply(label, HTML),

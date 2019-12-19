@@ -70,6 +70,7 @@ label <- paste("<p>","Country Name: ",powerplant_emissions$country_name,"</p>",
 
 ```{r}
 m <- leaflet(powerplant_viz) %>%  addTiles() %>%
+  setView(0,0, zoom = 0.9) %>%
   addPolygons(data = map_world1, weight = 1, smoothFactor = 0.5, color = "white",
               fillOpacity = 0.8, fillColor = ~pal(powerplant_emissions$emissions_total_2014),
               label = lapply(label, HTML),
