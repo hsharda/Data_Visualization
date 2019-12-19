@@ -8,24 +8,50 @@ library(ggplot2)
 library(scales)
 library(ggrepel)
 
+
 # Import Dataset
 
-#country_agg_data <- read.csv('Data/DataViz_memo_hs957.csv')
 country_agg_data <- read.csv('Data/Powerplant/gdp_emissions_pop.csv')
+powerplant_viz <- read.csv("Data/Powerplant/power_plant_data_locations.csv")
+
+check1 <- powerplant_viz %>%
+  group_by(country_name,fuel_category,primary_fuel) %>%
+  summarize(tot_capacity = sum(round(capacity_mw)))
+
+grandTotals <- check1 %>%
+  group_by(fuel_category,primary_fuel) %>%
+  summarize(Name = "All",
+            tot_capacity = sum(round(tot_capacity))) %>%
+  rename(country_name = Name) %>%
+  bind_rows(check1)
+
+
 ylab <- c(0, 2.5, 5.0, 7.5, 10, 12.5)
 xlab <- c(0, 2.5, 5.0, 7.5 ,10.0)
 legend <- c(2.5,5.0,7.5,10.0)
-country_agg_data$country_col <- country_agg_data$country_name
-#country_agg_data <- country_agg_data[c("country_name","emissions_capita_2014","gdp_2018","pop_2018")]
 
-#country_agg_data_omit <- na.omit(country_agg_data)
-#country_agg_data_omit <- droplevels(country_agg_data_omit)
+country_agg_data$country_col <- country_agg_data$country_name
+
+ls <- grandTotals %>% spread(primary_fuel, tot_capacity, fill = 0) %>%
+  names(.) %>% .[3:17]
+
+
 
 # Define Country List
-country_list <- distinct(country_agg_data, country_name)
-#country_list <- droplevels(country_list)
-country_list <- as.list(levels(country_list$country_name))
-country_list <- c('All',country_list)
+
+## Visualization 1:
+country_list_viz1 <- distinct(country_agg_data, country_name)
+country_list_viz1 <- as.list(levels(country_list_viz1$country_name))
+country_list_viz1 <- c('All',country_list_viz1)
+
+## Visualization 2:
+country_list_viz2 <- distinct(check1, country_name)
+country_list_viz2 <- as.list(levels(country_list_viz2$country_name))
+country_list_viz2 <- c('All',country_list_viz2)
+
+## Visualization 3:
+country_list_viz3 <- c('All',country_list_viz2)
+
 
 # Create the UI
 ui <- fluidPage(
@@ -44,7 +70,7 @@ ui <- fluidPage(
       p("Select a country from the drop down below to highlight it in the graph to the right"),
       selectInput(inputId = 'countries',                 
                   label = "Select a Country:",            
-                  choices = country_list # List of options
+                  choices = country_list_viz1 # List of options
       )
     ),
     
@@ -59,8 +85,30 @@ ui <- fluidPage(
       )
     
     ),
-  hr()
+  hr(),
+  
+  sidebarPanel(
+    position = "left",
+    h3('Select a country'),
+    p("Select a country from the drop down below to highlight it in the graph at the bottom"),
+    selectInput(inputId = 'countries_viz2',                 
+                label = "Select a Country:",            
+                choices = country_list_viz2 # List of options
+    ), width = 6 , plotlyOutput("plot_sunburst")
+  ),
+  
+  sidebarPanel(
+    position = "right",
+    h3('Select a country'),
+    p("Select a country from the drop down below to highlight it in the graph at the bottom"),
+    selectInput(inputId = 'countries_viz3',                 
+                label = "Select a Country:",            
+                choices = country_list_viz3 # List of options
+    ), width = 6 , plotlyOutput("plot_sunburst2")
+    
   )
+  
+)
   
 
 # Define the server actions
@@ -72,20 +120,19 @@ server <- function(input, output){
       
       levels(country_agg_data$country_col)[levels(country_agg_data$country_col)!=input$countries] <- "Other countries"
       
-      #country_subset <- country_agg_data %>% filter(country_name == input$countries)
       
       g <- ggplot(country_agg_data,
                   aes(Emissions,gdp_ppp)) +
         geom_point(alpha = 0.4,aes(size = pop_size, frame = years,
-                                   color = country_col, ids = country_name)) +
-        #scale_colour_gradient(low="skyblue",high="red4",labels = paste0(legend, " Million"),
-                              #breaks = 10^6 * legend) +
+                                   color = country_col, ids = country_name), show.legend = F) +
         scale_y_continuous(labels = dollar, breaks = 10^4 * ylab) + 
         scale_x_continuous(labels = comma, breaks = 10^6 * xlab) +
-        xlab("Total Carbon emissions") + 
+        xlab("Total Carbon Emissions") + 
         ylab("GDP per Capita, PPP") +
         ggtitle("GDP per Capita, PPP vs. Emissions per capita") +
-        theme_light()
+        theme_light() + 
+        scale_color_manual(values = c("skyblue","red4"))
+        
       
       g
     }
@@ -100,7 +147,7 @@ server <- function(input, output){
                               breaks = 10^6 * legend) +
         scale_y_continuous(labels = dollar, breaks = 10^4 * ylab) + 
         scale_x_continuous(labels = comma, breaks = 10^6 * xlab) +
-        xlab("Total Carbon emissions") + 
+        xlab("Total Carbon Emissions") + 
         ylab("GDP per Capita, PPP") +
         ggtitle("GDP per Capita, PPP vs. Emissions per capita") +
         theme_light()
@@ -108,9 +155,95 @@ server <- function(input, output){
       g
       
     }
+  })
+  
+  
+
+  output$plot_sunburst <- renderPlotly({
+    
+    # Visualization 2 codes:
+    
+    sum_non_renew <- grandTotals %>% filter(fuel_category == "Non-renewable" & country_name == input$countries_viz2) %>% summarise(sum = sum(tot_capacity))
+    sum_renew <- grandTotals %>% filter(fuel_category == "Renewable" & country_name == input$countries_viz2) %>% summarise(sum = sum(tot_capacity))
+    
+    sum_total <- grandTotals %>% filter(country_name == input$countries_viz2) %>%
+      group_by(country_name) %>% summarise(sum = sum(tot_capacity))
+    
+    values <-c(sum_total$sum,sum_non_renew$sum,sum_renew$sum)
+    
+    for(val in ls){
+      a <- grandTotals %>% filter(primary_fuel == val & country_name == input$countries_viz2) %>%
+        summarise(sum = sum(tot_capacity))
+      values = append(round(values), round(a$sum))
+    }
+    
+    labels <- c("All","Non-renewable", "Renewable", ls)
+    parents <- c("","All","All","Renewable",
+                 "Non-renewable","Non-renewable","Non-renewable","Renewable",
+                 "Renewable","Renewable","Non-renewable","Non-renewable",
+                 "Non-renewable","Renewable","Renewable","Non-renewable",
+                 "Renewable","Renewable")
+    
+    index_nums <- which(values %in% 0)
+    values <- values[-index_nums]
+    labels <- labels[-index_nums]
+    parents <- parents[-index_nums]
+    
+    
+    p <- plot_ly(
+      labels = labels,
+      parents = parents,
+      values = values,
+      type = 'sunburst',
+      branchvalues = "total"
+    ) %>%
+      layout(title = 'Fuel Category')
+    p
+  })
 
     
-})
+    output$plot_sunburst2 <- renderPlotly({
+      
+    # Visualization 3 codes:
+    
+    sum_non_renew <- grandTotals %>% filter(fuel_category == "Non-renewable" & country_name == input$countries_viz3) %>% summarise(sum = sum(tot_capacity))
+    sum_renew <- grandTotals %>% filter(fuel_category == "Renewable" & country_name == input$countries_viz3) %>% summarise(sum = sum(tot_capacity))
+    
+    sum_total <- grandTotals %>% filter(country_name == input$countries_viz3) %>%
+      group_by(country_name) %>% summarise(sum = sum(tot_capacity))
+    
+    values <-c(sum_total$sum,sum_non_renew$sum,sum_renew$sum)
+    
+    for(val in ls){
+      a <- grandTotals %>% filter(primary_fuel == val & country_name == input$countries_viz3) %>%
+        summarise(sum = sum(tot_capacity))
+      values = append(round(values), round(a$sum))
+    }
+    
+    labels <- c("All","Non-renewable", "Renewable", ls)
+    parents <- c("","All","All","Renewable",
+                 "Non-renewable","Non-renewable","Non-renewable","Renewable",
+                 "Renewable","Renewable","Non-renewable","Non-renewable",
+                 "Non-renewable","Renewable","Renewable","Non-renewable",
+                 "Renewable","Renewable")
+    
+    index_nums <- which(values %in% 0)
+    values <- values[-index_nums]
+    labels <- labels[-index_nums]
+    parents <- parents[-index_nums]
+    
+    
+    p <- plot_ly(
+      labels = labels,
+      parents = parents,
+      values = values,
+      type = 'sunburst',
+      branchvalues = "total"
+    ) %>%
+      layout(title = 'Fuel Category')
+    p
+  })
+
 }
 
 # Run the app

@@ -24,22 +24,21 @@ check1 <- powerplant_viz %>%
   group_by(country_name,fuel_category,primary_fuel) %>%
   summarize(tot_capacity = sum(round(capacity_mw)))
 
-grandTotals <- powerplant_viz %>%
+grandTotals <- check1 %>%
   group_by(fuel_category,primary_fuel) %>%
   summarize(Name = "All",
-            tot_capacity = sum(round(capacity_mw))) %>%
+            tot_capacity = sum(round(tot_capacity))) %>%
   rename(country_name = Name) %>%
   bind_rows(check1)
 ```
 
 ```{r}
-spreaded <- grandTotals %>% spread(primary_fuel, tot_capacity, fill = 0)
-ls <- names(spreaded)
-ls1 <- ls[3:17]
+ls <- grandTotals %>% spread(primary_fuel, tot_capacity, fill = 0) %>%
+  names(.) %>% .[3:17]
 ```
 
 ```{r}
-name_country = "Australia"
+name_country = "India"
 n <- grandTotals %>% filter(country_name == name_country)
 
 sum_non_renew <- grandTotals %>% filter(fuel_category == "Non-renewable" & country_name == name_country) %>% summarise(sum = sum(tot_capacity))
@@ -56,7 +55,7 @@ values <-c(sum_total$sum,sum_non_renew$sum,sum_renew$sum)
 
 
 ```{r}
-for (val in ls1){
+for (val in ls){
   a <- grandTotals %>% filter(primary_fuel == val & country_name == name_country) %>%
     summarise(sum = sum(tot_capacity))
   values = append(round(values), round(a$sum))
@@ -86,7 +85,8 @@ p <- plot_ly(
   parents = parents,
   values = values,
   type = 'sunburst',
-  branchvalues = "total"
+  branchvalues = "total",
+  textinfo = "label+percent root"
 ) %>%
     layout(title = 'Fuel Category')
 p
@@ -99,7 +99,9 @@ p <- plot_ly(
   labels = c("Eve", "Cain", "Seth", "Enos", "Noam", "Abel", "Awan", "Enoch", "Azura"),
   parents = c("", "Eve", "Eve", "Seth", "Seth", "Eve", "Eve", "Awan", "Eve"),
   values = c(10, 14, 12, 10, 2, 6, 6, 4, 4),
-  type = 'sunburst'
+  type = 'sunburst',
+  textinfo = "label+percent",
+  hoverinfo = "percent root"
 )
 p
 ```
@@ -145,7 +147,7 @@ p
 ## Version 2:
 
 ```{r}
-name_country = "Australia"
+name_country = "India"
 n <- grandTotals %>% filter(country_name == name_country)
 ```
 
