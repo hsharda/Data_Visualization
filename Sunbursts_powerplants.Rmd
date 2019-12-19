@@ -93,7 +93,7 @@ p <- plot_ly(
 p
 ```
 
-## Extra Codes
+## Extra Codes:
 
 ```{r}
 p <- plot_ly(
@@ -106,100 +106,3 @@ p <- plot_ly(
 )
 p
 ```
-
-
-```{r}
-tree <- d3_nest(check2, value_cols = "tot_capacity")
-sb2 <- sund2b(tree, width="100%")
-sb2
-```
-
-```{r}
-q <- plot_ly(
-  labels = c("All","Renewable","Non-Renewable","Hydro"),
-  parents = c("","All","All","Renewable"),
-  values = c(30.556,10.556,20,5),
-  type = 'sunburst',
-  branchvalues = "total"
-)
-q
-```
-
-```{r}
-values
-sum(values[2:3])
-```
-
-```{r}
-
-```
-```{r}
-p <- plot_ly(
-  labels = labels_check,
-  parents = parents_check,
-  values = values_check,
-  type = 'sunburst',
-  branchvalues = "total"
-) %>%
-    layout(title = 'Fuel Category')
-p
-```
-
-## Version 2:
-
-```{r}
-name_country = "India"
-n <- grandTotals %>% filter(country_name == name_country)
-```
-
-```{r}
-n_spreaded <- n %>% spread(primary_fuel, tot_capacity, fill = 0)
-ls_2 <- names(n_spreaded)
-ls1_2 <- ls_2[3:length(ls_2)]
-```
-
-```{r}
-sum_non_renew <- grandTotals %>% filter(fuel_category == "Non-renewable" & country_name == name_country) %>% summarise(sum = sum(tot_capacity))
-
-sum_renew <- grandTotals %>% filter(fuel_category == "Renewable" & country_name == name_country) %>% summarise(sum = sum(tot_capacity))
-
-sum_total <- grandTotals %>% filter(country_name == name_country) %>%
-  group_by(country_name) %>% summarise(sum = sum(tot_capacity))
-
-values <-c(sum_total$sum,sum_non_renew$sum,sum_renew$sum)
-
-```
-
-```{r}
-for (val in ls1_2){
-  a <- grandTotals %>% filter(primary_fuel == val & country_name == name_country) %>%
-    summarise(sum = sum(tot_capacity))
-  values = append(round(values), round(a$sum))
-}
-
-labels <- c("All","Non-Renewable", "Renewable", ls1_2)
-parents <- c("","All","All","Renewable",
-             "Non-Renewable","Non-Renewable","Non-Renewable","Renewable",
-             "Renewable","Renewable","Non-Renewable")
-
-values
-ls_2
-
-,"Non-Renewable",
-             "Non-Renewable","Renewable","Renewable","Renewable",
-             "Renewable","Renewable"
-```
-
-```{r}
-p <- plot_ly(
-  labels = labels,
-  parents = parents,
-  values = values,
-  type = 'sunburst',
-  branchvalues = "total"
-) %>%
-    layout(title = 'Fuel Category')
-p
-```
-
-

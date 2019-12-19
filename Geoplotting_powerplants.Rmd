@@ -30,7 +30,6 @@ library(maps)
 powerplant_viz <- read.csv("Data/Powerplant/power_plant_data_locations.csv")
 powerplant_emissions <- read.csv("Data/Powerplant/power_plants_locations_emissions.csv")
 map_world <- st_read("Data/Shapefile/TM_WORLD_BORDERS-0.3.shp")
-#country_data <- read.csv("Data/DataViz memo_hs957.csv")
 ```
 
 
@@ -45,22 +44,18 @@ is.element(map_world$ISO3,powerplant_emissions$ISO3)
 ```
 
 ```{r}
-map_world1 <- subset(map_world,is.element(map_world$ISO3,powerplant_emissions$ISO3))
+map_world <- subset(map_world,is.element(map_world$ISO3,powerplant_emissions$ISO3))
 ```
 
 ```{r}
-powerplant_emissions1 <- subset(powerplant_emissions,is.element(powerplant_emissions$ISO3,map_world1$ISO3))
-```
-
-
-```{r}
-powerplant_emissions1 <- powerplant_emissions1[order(match(powerplant_emissions1$ISO3,map_world1$ISO3)),]
+powerplant_emissions <- subset(powerplant_emissions,is.element(powerplant_emissions$ISO3,map_world$ISO3)) %>%
+  .[order(match(powerplant_emissions$ISO3,map_world$ISO3)),]
 ```
 
 ```{r}
 bins <- c(0, 2, 4, 6, 8, 10, 12, Inf)
 pal <- colorBin(palette = "YlOrRd",
-                    domain = powerplant_emissions1$emissions_total_2014,
+                    domain = powerplant_emissions$emissions_total_2014,
                     bins = bins * 10^6)
 pal2 <- colorFactor(palette = c("firebrick3","darkolivegreen3"), domain = powerplant_viz$fuel_category)
 
@@ -68,19 +63,19 @@ pal2 <- colorFactor(palette = c("firebrick3","darkolivegreen3"), domain = powerp
 
 
 ```{r}
-label <- paste("<p>","Country Name: ",powerplant_emissions1$country_name,"</p>",
-               "<p>","Emissions: ",powerplant_emissions1$emissions_total_2014,"</p>",
+label <- paste("<p>","Country Name: ",powerplant_emissions$country_name,"</p>",
+               "<p>","Emissions: ",powerplant_emissions$emissions_total_2014,"</p>",
                sep = "")
 ```
 
 ```{r}
 m <- leaflet(powerplant_viz) %>%  addTiles() %>%
   addPolygons(data = map_world1, weight = 1, smoothFactor = 0.5, color = "white",
-              fillOpacity = 0.8, fillColor = ~pal(powerplant_emissions1$emissions_total_2014),
+              fillOpacity = 0.8, fillColor = ~pal(powerplant_emissions$emissions_total_2014),
               label = lapply(label, HTML),
               group = "GHG Emissions") %>%
   addLegend(pal = pal,
-            values = powerplant_emissions1$emissions_total_2014,
+            values = powerplant_emissions$emissions_total_2014,
             opacity = 0.7,
             position = "topright",
             title = "GHG Emissions") %>%

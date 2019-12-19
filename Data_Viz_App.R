@@ -12,17 +12,12 @@ library(sf)
 library(htmltools)
 
 
-# Import Dataset
+# Import Datasets
 
 country_agg_data <- read.csv('Data/Powerplant/gdp_emissions_pop.csv')
 powerplant_viz <- read.csv("Data/Powerplant/power_plant_data_locations.csv")
-
-
-#powerplant_viz <- read.csv("Data/Powerplant/power_plant_data_locations.csv")
 powerplant_emissions <- read.csv("Data/Powerplant/power_plants_locations_emissions.csv")
 map_world <- st_read("Data/Shapefile/TM_WORLD_BORDERS-0.3.shp")
-
-#country_data <- read.csv("Data/DataViz memo_hs957.csv")
 
 # Data Wrangling Tasks
 
@@ -83,7 +78,7 @@ country_list_viz2 <- as.list(levels(country_list_viz2$country_name))
 country_list_viz2 <- c('All',country_list_viz2)
 
 ## Visualization 3 (Sunbursts - Right):
-country_list_viz3 <- c('All',country_list_viz2)
+country_list_viz3 <- country_list_viz2
 
 
 # Create the UI
@@ -104,7 +99,8 @@ ui <- fluidPage(
              and cause hurricanes and other extreme weather to stick around longer (Levin, K., & Tirpak, D. (2019))."),
            p("This dashboard aims to provide evidence of increasing GHG emissions with a spatial view
              of different kinds of powerplants through out the world. It further illustrates a divide of renewable
-             and non-renewable powerplants at country specific level."))
+             and non-renewable powerplants at country specific level.")
+           )
     ),
   
   hr(),
@@ -125,7 +121,10 @@ ui <- fluidPage(
     # Define text for main panel
     mainPanel(
       h4("Overview"),
-      p("The world is rapidly changing. It is important to understand how different countries' development trajectories have changed over time.
+      p("The below interactive graph helps views trends of GDP per capita, PPP world spanning from the years 2000 to 2014.
+        GDP per capita suggests the countries' development trajectories and how it has influenced GHG emissions
+        
+        It is important to understand how different countries' development trajectories have changed over time.
         This dashboard is intended to make it easier to see trends for individual countries as well as groups of countries.
         Press the play button below to see how countries have progressed over time.
         Select a country from the dropdown list to highlight its progress."),
@@ -330,15 +329,15 @@ server <- function(input, output){
     }
     
     
-    p <- plot_ly(
+    q <- plot_ly(
       labels = labels,
       parents = parents,
       values = values,
       type = 'sunburst',
       branchvalues = "total"
     ) %>%
-      layout(title = 'Fuel Category')
-    p
+      layout(title = 'Powerplant capacity by Fuel Category')
+    q
   })
 
 }
