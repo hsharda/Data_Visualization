@@ -94,6 +94,21 @@ ui <- fluidPage(
   
   hr(),
   
+  fluidRow(
+    column(width = 12, align = "center",
+           h3("Executive Summary")),
+    column(width = 12,
+           p("With the continuous increase in the greenhouse gas (GHG) emissions (Levin, K. (2018)),
+             the effects of climate change are more prominent than ever. Scientists have confirmed that warming will
+             increase the spread of Ebola virus, reduce emperor penguin populations by up to 80% by 2100,
+             and cause hurricanes and other extreme weather to stick around longer (Levin, K., & Tirpak, D. (2019))."),
+           p("This dashboard aims to provide evidence of increasing GHG emissions with a spatial view
+             of different kinds of powerplants through out the world. It further illustrates a divide of renewable
+             and non-renewable powerplants at country specific level."))
+    ),
+  
+  hr(),
+  
   # Use the sidebar layout for app
   sidebarLayout(
     
@@ -193,9 +208,9 @@ server <- function(input, output){
                               breaks = 10^6 * legend) +
         scale_y_continuous(labels = dollar, breaks = 10^4 * ylab) + 
         scale_x_continuous(labels = comma, breaks = 10^6 * xlab) +
-        xlab("Total Carbon Emissions") + 
-        ylab("GDP per Capita, PPP") +
-        ggtitle("GDP per Capita, PPP vs. Emissions per capita") +
+        xlab("Total Carbon Emissions (Kilo Ton)") + 
+        ylab("GDP per Capita, PPP $") +
+        ggtitle("GDP per Capita, PPP vs. Total emissions") +
         theme_light()
       
       g
@@ -261,9 +276,12 @@ server <- function(input, output){
                  "Renewable","Renewable")
     
     index_nums <- which(values %in% 0)
-    values <- values[-index_nums]
-    labels <- labels[-index_nums]
-    parents <- parents[-index_nums]
+    
+    if(length(index_nums)!=0){
+      values <- values[-index_nums]
+      labels <- labels[-index_nums]
+      parents <- parents[-index_nums]
+    }
     
     
     p <- plot_ly(
@@ -304,9 +322,12 @@ server <- function(input, output){
                  "Renewable","Renewable")
     
     index_nums <- which(values %in% 0)
-    values <- values[-index_nums]
-    labels <- labels[-index_nums]
-    parents <- parents[-index_nums]
+    
+    if(length(index_nums)!=0){
+      values <- values[-index_nums]
+      labels <- labels[-index_nums]
+      parents <- parents[-index_nums]
+    }
     
     
     p <- plot_ly(

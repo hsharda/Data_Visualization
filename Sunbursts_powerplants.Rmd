@@ -72,9 +72,12 @@ parents <- c("","All","All","Renewable",
 
 ```{r}
 index_nums <- which(values %in% 0)
-values <- values[-index_nums]
-labels <- labels[-index_nums]
-parents <- parents[-index_nums]
+
+if(length(index_nums)!=0){
+  values <- values[-index_nums]
+  labels <- labels[-index_nums]
+  parents <- parents[-index_nums]
+}
 ```
 
 
@@ -84,8 +87,7 @@ p <- plot_ly(
   parents = parents,
   values = values,
   type = 'sunburst',
-  branchvalues = "total",
-  textinfo = "label+percent root"
+  branchvalues = 'Total'
 ) %>%
     layout(title = 'Fuel Category')
 p
