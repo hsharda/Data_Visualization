@@ -329,7 +329,7 @@ server <- function(input, output){
         ylab("GDP per Capita, PPP($)") +
         ggtitle("GDP per Capita, PPP vs. Annual emissions") +
         theme_light() + 
-        scale_color_manual(values = c("skyblue","red4"))
+        scale_color_manual(values = c("grey","red4"))
         
       
       g
