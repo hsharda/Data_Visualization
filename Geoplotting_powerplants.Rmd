@@ -86,7 +86,7 @@ m <- leaflet(powerplant_viz) %>%  addTiles() %>%
             position = "bottomright",
             title = "Fuel Category") %>%
   addCircleMarkers(lat = ~latitude, lng = ~longitude,
-                   popup = ~name,
+                   popup = ~name_type,
                    radius = ~0.0000001,
                    color = ~pal2(powerplant_viz$fuel_category),
                    fillOpacity = 0.8,
@@ -98,7 +98,7 @@ m
 ```
 
 
-## Other Ideas:
+## Other Ideas & Extra Codes (Not a part of the main visualizations):
 
 
 ```{r}
