@@ -23,9 +23,13 @@ map_world <- st_read("Data/Shapefile/TM_WORLD_BORDERS-0.3.shp")
 
 ## For Sunbursts charts
 
+# Calculating the sum across each country name, fuel category and primary fuel
+
 check1 <- powerplant_viz %>%
   group_by(country_name,fuel_category,primary_fuel) %>%
   summarize(tot_capacity = sum(round(capacity_mw)))
+
+# Calculating the sum on the total level and appending it into one dataset
 
 grandTotals <- check1 %>%
   group_by(fuel_category,primary_fuel) %>%
@@ -41,6 +45,8 @@ xlab <- c(0, 2.5, 5.0, 7.5 ,10.0)
 legend <- c(2.5,5.0,7.5,10.0)
 
 country_agg_data$country_col <- country_agg_data$country_name
+
+# Extracting the list of all powerplant types
 
 ls <- grandTotals %>% spread(primary_fuel, tot_capacity, fill = 0) %>%
   names(.) %>% .[3:17]
@@ -244,11 +250,20 @@ ui <- fluidPage(
   
   fluidRow(
     column(width = 12, align = "left",
-           h6("Conclusion:",
+           h4("Next Steps:"),
               p(),
-              p("1. Select the country of choice from the drop-down menu"),
-              p("2. Click on either Renewable and Non-renewable tags to further explore 
-             types of powerplants within each category"))
+              p("1. The graphs above provide a comprehensive outlook on how economic development
+                has perceivably lead to higher GHG emissions. Having said that, there needs to be a shift 
+                in the objective of recent governments towards sustained development by adopting newer and
+                more innovative technologies"),
+              p("2. This dashboard further helps in understand how diversified the energy lanscape of a country
+                country compares to the rest of the world. It providers policy makers with the opportunity to explore and 
+                make policies focussing more on how to make renewable energies as profitable as non-renewable ones without adverse effects
+                to the associated job market. Such policies can help push the world to a future where clean air and water is as accessible as it once was 
+                for the generations before."),
+           p("3. Lastly, more work is being done on the health implications of increased ambient air pollution which would soon be
+             added to the dashboard.")
+           
     )
   ),
   hr(),
@@ -381,13 +396,20 @@ server <- function(input, output){
     
     # Visualization 2 codes:
     
+    # The below code generates the Total capacity, total renewable and non-renewable capacity
+    
     sum_non_renew <- grandTotals %>% filter(fuel_category == "Non-renewable" & country_name == input$countries_viz2) %>% summarise(sum = sum(tot_capacity))
     sum_renew <- grandTotals %>% filter(fuel_category == "Renewable" & country_name == input$countries_viz2) %>% summarise(sum = sum(tot_capacity))
     
     sum_total <- grandTotals %>% filter(country_name == input$countries_viz2) %>%
       group_by(country_name) %>% summarise(sum = sum(tot_capacity))
     
+    # Concatinating values of total, total renewable and total non-renewable
+    
     values <-c(sum_total$sum,sum_non_renew$sum,sum_renew$sum)
+    
+    # Running a function to calulate capacities across each type of powerplant and then
+    # append it to the main dataset
     
     for(val in ls){
       a <- grandTotals %>% filter(primary_fuel == val & country_name == input$countries_viz2) %>%
@@ -396,13 +418,20 @@ server <- function(input, output){
     }
     
     labels <- c("All","Non-renewable", "Renewable", ls)
+    
+    # Assigning Parents to the labels
     parents <- c("","All","All","Renewable",
                  "Non-renewable","Non-renewable","Non-renewable","Renewable",
                  "Renewable","Renewable","Non-renewable","Non-renewable",
                  "Non-renewable","Renewable","Renewable","Non-renewable",
                  "Renewable","Renewable")
     
+    # Calculating the indices in the values which are ZERO. Every ZERO value suggests that
+    # there is no such powerplant type in that chosen particular country
+    
     index_nums <- which(values %in% 0)
+    
+    # Running a loop. When the user chooses all the loop wouldn't run
     
     if(length(index_nums)!=0){
       values <- values[-index_nums]
@@ -410,6 +439,7 @@ server <- function(input, output){
       parents <- parents[-index_nums]
     }
     
+    # Creating Sunburt chart
     
     p <- plot_ly(
       labels = labels,
@@ -427,13 +457,19 @@ server <- function(input, output){
       
     # Visualization 3 codes:
     
+    # The below code generates the Total capacity, total renewable and non-renewable capacity
     sum_non_renew <- grandTotals %>% filter(fuel_category == "Non-renewable" & country_name == input$countries_viz3) %>% summarise(sum = sum(tot_capacity))
     sum_renew <- grandTotals %>% filter(fuel_category == "Renewable" & country_name == input$countries_viz3) %>% summarise(sum = sum(tot_capacity))
     
     sum_total <- grandTotals %>% filter(country_name == input$countries_viz3) %>%
       group_by(country_name) %>% summarise(sum = sum(tot_capacity))
     
+    # Concatinating values of total, total renewable and total non-renewable
+    
     values <-c(sum_total$sum,sum_non_renew$sum,sum_renew$sum)
+    
+    # Running a function to calulate capacities across each type of powerplant and then
+    # append it to the main dataset
     
     for(val in ls){
       a <- grandTotals %>% filter(primary_fuel == val & country_name == input$countries_viz3) %>%
@@ -441,15 +477,23 @@ server <- function(input, output){
       values = append(round(values), round(a$sum))
     }
     
+    # Creating labels for the chart
     labels <- c("All","Non-renewable", "Renewable", ls)
+    
+    # Assigning Parents to the labels
     parents <- c("","All","All","Renewable",
                  "Non-renewable","Non-renewable","Non-renewable","Renewable",
                  "Renewable","Renewable","Non-renewable","Non-renewable",
                  "Non-renewable","Renewable","Renewable","Non-renewable",
                  "Renewable","Renewable")
     
+    
+    # Calculating the indices in the values which are ZERO. Every ZERO value suggests that
+    # there is no such powerplant type in that chosen particular country
+    
     index_nums <- which(values %in% 0)
     
+    # Running a loop. When the user chooses all the loop wouldn't run
     if(length(index_nums)!=0){
       values <- values[-index_nums]
       labels <- labels[-index_nums]

@@ -27,6 +27,7 @@ library(maps)
 
 
 ```{r}
+# Importing datasets
 powerplant_viz <- read.csv("Data/Powerplant/power_plant_data_locations.csv")
 powerplant_emissions <- read.csv("Data/Powerplant/power_plants_locations_emissions.csv")
 map_world <- st_read("Data/Shapefile/TM_WORLD_BORDERS-0.3.shp")
@@ -34,35 +35,44 @@ map_world <- st_read("Data/Shapefile/TM_WORLD_BORDERS-0.3.shp")
 
 
 ```{r}
+# Checking which countries in the powerplant data don't match with the shapefile
 is.element(powerplant_emissions$cou,map_world$ISO3)
 # Number 86 is not matching Kosovo
 powerplant_emissions$ISO3[86]
 ```
 
 ```{r}
+# Checking which countries in the shape file don't match with the powerplant data
 is.element(map_world$ISO3,powerplant_emissions$ISO3)
 ```
 
 ```{r}
+# Subseting the shpefile with only the countries present in the powerplant data
 map_world <- subset(map_world,is.element(map_world$ISO3,powerplant_emissions$ISO3))
 ```
 
 ```{r}
+# Subseting the powerplant data with only the countries present in the shapefile data
+# and ordering the data
 powerplant_emissions <- subset(powerplant_emissions,is.element(powerplant_emissions$ISO3,map_world$ISO3)) %>%
   .[order(match(powerplant_emissions$ISO3,map_world$ISO3)),]
 ```
 
 ```{r}
-bins <- c(0, 2, 4, 6, 8, 10, 12, Inf)
+# Assigning bins, palette to the GHG emissions
+bins <- c(0, 3, 6, 9, 12, Inf)
 pal <- colorBin(palette = "YlOrRd",
                     domain = powerplant_emissions$emissions_total_2014,
                     bins = bins * 10^6)
+
+# Assigning palette to country selected vs the rest of the countries
 pal2 <- colorFactor(palette = c("firebrick3","darkolivegreen3"), domain = powerplant_viz$fuel_category)
 
 ```
 
 
 ```{r}
+# Adding labels to polygons whihc has the data on GHG emissions
 label <- paste("<p>","Country Name: ",powerplant_emissions$country_name,"</p>",
                "<p>","Emissions: ",powerplant_emissions$emissions_total_2014,"</p>",
                sep = "")

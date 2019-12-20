@@ -16,14 +16,18 @@ library(janitor)
 ```
 
 ```{r}
+# Reading Powerplant data
 powerplant_viz <- read.csv("Data/Powerplant/power_plant_data_locations.csv")
 ```
 
 ```{r}
+
+# Calculating the sum across each country name, fuel category and primary fuel
 check1 <- powerplant_viz %>%
   group_by(country_name,fuel_category,primary_fuel) %>%
   summarize(tot_capacity = sum(round(capacity_mw)))
 
+# Calculating the sum on the total level and appending it into one dataset
 grandTotals <- check1 %>%
   group_by(fuel_category,primary_fuel) %>%
   summarize(Name = "All",
@@ -33,11 +37,14 @@ grandTotals <- check1 %>%
 ```
 
 ```{r}
+# Extracting the list of all powerplant types
 ls <- grandTotals %>% spread(primary_fuel, tot_capacity, fill = 0) %>%
   names(.) %>% .[3:17]
 ```
 
 ```{r}
+# This part of the code emulates what shiny would do, which is take an input
+# and dynamically generate a new subset od fata with values of the chosen country
 name_country = "India"
 
 sum_non_renew <- grandTotals %>% filter(fuel_category == "Non-renewable" & country_name == name_country) %>% summarise(sum = sum(tot_capacity))
@@ -49,18 +56,24 @@ sum_total <- grandTotals %>% filter(country_name == name_country) %>%
 ```
 
 ```{r}
+# Concatinating values of total, total renewable and total non-renewable
 values <-c(sum_total$sum,sum_non_renew$sum,sum_renew$sum)
 ```
 
 
 ```{r}
+# Running a function to calulate capacities across each type of powerplant and then
+# append it to the main dataset
 for (val in ls){
   a <- grandTotals %>% filter(primary_fuel == val & country_name == name_country) %>%
     summarise(sum = sum(tot_capacity))
   values = append(round(values), round(a$sum))
 }
 
+# Creating labels for the chart
 labels <- c("All","Non-renewable", "Renewable", ls)
+
+# Assigning Parents to the labels
 parents <- c("","All","All","Renewable",
              "Non-renewable","Non-renewable","Non-renewable","Renewable",
              "Renewable","Renewable","Non-renewable","Non-renewable",
@@ -71,8 +84,11 @@ parents <- c("","All","All","Renewable",
 
 
 ```{r}
+# Calculating the indices in the values which are ZERO. Every ZERO value suggests that
+# there is no such powerplant type in that chosen particular country
 index_nums <- which(values %in% 0)
 
+# Running a loop. When the user chooses all the loop wouldn't run
 if(length(index_nums)!=0){
   values <- values[-index_nums]
   labels <- labels[-index_nums]
@@ -82,6 +98,7 @@ if(length(index_nums)!=0){
 
 
 ```{r}
+# Creating Sunburt chart
 p <- plot_ly(
   labels = labels,
   parents = parents,
@@ -93,7 +110,7 @@ p <- plot_ly(
 p
 ```
 
-## Extra Codes:
+## Extra Codes (NOT A PART OF THE VISUALIZATION):
 
 ```{r}
 p <- plot_ly(
