@@ -7,12 +7,10 @@ Created on Sat Sep 28 00:44:55 2019
 """
 # Global Data Lab: https://globaldatalab.org/areadata/hhsize/?interpolation=1&extrapolation=1&extrapolation_years=3&nearest_real=0
 # WRI: http://datasets.wri.org/dataset/globalpowerplantdatabase
-# WB: Access to Electricity; https://data.worldbank.org/indicator/EG.ELC.ACCS.RU.ZS
-# WB: World Development Indicators
 # WB: GDP per capita, PPP https://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD
+# WB: Carbon Emissions World Bank: Carbon Emissions; https://data.worldbank.org/indicator/EN.ATM.CO2E.PC
  
 import pandas as pd
-import numpy as np
 from functools import reduce
 
 #Importing the dataset
@@ -29,11 +27,13 @@ power_plant_data = power_plant_data.rename(columns = {'country':'ISO3','country_
 
 list(power_plant_data.columns.values)
 
+# Selecting relevant variables
 power_plant_data = power_plant_data[['ISO3','country_name','name','capacity_mw',
                                      'latitude','longitude','primary_fuel']]
 
 power_plant_data.primary_fuel.unique()
 
+# Defining fuel category for the type of powerplant
 def category(x):
     if x == "Hydro":
         return "Renewable"
@@ -59,25 +59,17 @@ power_plant_data["fuel_category"] = power_plant_data["primary_fuel"].apply(categ
 power_plant_data['name'] = power_plant_data['name'].str.title()
 power_plant_data['name_type'] = power_plant_data['name']+ ", " +power_plant_data['primary_fuel'] + " Powerplant"
 
-
-power_plant_data.to_csv(r'Data/Powerplant/power_plant_data_locations.csv', index = False)
-
-
-#CO2 emissions 
-#co2_emissions_capita = co2_emissions_capita[['Country Name','Country Code','2014']].rename(columns = {'2014': 'emissions_capita_2014'})
-#co2_emissions_total = co2_emissions_total[['Country Name','Country Code','2014']].rename(columns = {'2014': 'emissions_total_2014'})
-co2_emissions_viz = co2_emissions_total[['Country Name','Country Code','2014']].rename(columns = {'2014': 'emissions_total_2014',
-                                       'Country Code': 'ISO3','Country Name':'country_name'})
-
-
-    
-
+# Creating dummies and concatinating them into the main dataset
 pp_dummies = pd.get_dummies(power_plant_data['primary_fuel'], prefix = 'primary_fuel')
 pp_dummies_category = pd.get_dummies(power_plant_data['fuel_category'], prefix = 'fuel_category')
 power_plant_data = pd.concat([power_plant_data, pp_dummies,pp_dummies_category], axis=1)
 
+# Exporting file
+power_plant_data.to_csv(r'Data/Powerplant/power_plant_data_locations.csv', index = False)
+
 list(power_plant_data.columns.values)
 
+# Calculating the total capacity of the powerplants in the world
 pp_data_group = pd.DataFrame(power_plant_data.groupby(['ISO3','country_name'])['capacity_mw',
                              'primary_fuel_Biomass','primary_fuel_Coal','primary_fuel_Cogeneration',
                              'primary_fuel_Gas','primary_fuel_Geothermal','primary_fuel_Hydro',
@@ -89,13 +81,22 @@ pp_data_group = pd.DataFrame(power_plant_data.groupby(['ISO3','country_name'])['
 # Calculating the total count
 pp_data_group['Total_power_plants'] = pp_data_group.loc[:,['fuel_category_Non-renewable','fuel_category_Renewable']].sum(axis=1)
 
+
+#CO2 emissions 
+
+co2_emissions_viz = co2_emissions_total[['Country Name','Country Code','2014']].rename(columns = {'2014': 'emissions_total_2014',
+                                       'Country Code': 'ISO3','Country Name':'country_name'})
+
+
+## Merging both the datasets    
 merged_viz1 = pd.merge(pp_data_group, co2_emissions_viz, on = ['ISO3'], how = 'left')
 merged_viz1 = merged_viz1.drop(["country_name_y"], axis = 1).rename(columns = {"country_name_x":"country_name"})
 
 
-
+# Exporting file
 merged_viz1.to_csv(r'Data/Powerplant/power_plants_locations_emissions.csv', index = False)
 
+#### For creating the plotly animated GRAPHs
 
 ## Melting CO2 emissions data
 
@@ -150,4 +151,5 @@ pp_data_group_subset = pp_data_group["ISO3"]
 
 merged_viz1 = pd.merge(pp_data_group_subset,merged_viz, on = ["ISO3"], how = 'inner')
 
+# Exporting datasets
 merged_viz1.to_csv(r'Data/Powerplant/gdp_emissions_pop.csv', index = False)
